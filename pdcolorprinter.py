@@ -6,13 +6,13 @@ from cprinter import TC  # pip install cprinter
 def pdp(df, max_column_size=50, repeat_cols=0):
     def _print_cols():
         nonlocal columnsprint
-        print("", end="\n")
 
         for indiprint, labels in enumerate(columnsprint):
             if indiprint != len(columnsprint):
                 print(TC(f"{labels}  ").bg_red.fg_black, end="")
                 print(TC("█").fg_yellow.bg_black, end="")
             if indiprint + 1 == len(columnsprint):
+                pass
                 print("", end="\n")
 
     def _get_colors(len_numpyarray):
