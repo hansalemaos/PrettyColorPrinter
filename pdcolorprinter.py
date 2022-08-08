@@ -40,7 +40,7 @@ def pdp(df, max_column_size=50, repeat_cols=0):
     maxsize = [
         df[x].astype("string").array.astype("U").dtype.itemsize // 4 for x in df.columns
     ]
-    maxsize_cols = [len(x) for x in df.columns]
+    maxsize_cols = [len(str(x)) for x in df.columns]
     maxsize = [x if x >= y else y for x, y in zip(maxsize, maxsize_cols)]
 
     maxsize_ = [x + 2 if x < max_column_size else max_column_size for x in maxsize]
