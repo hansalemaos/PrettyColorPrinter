@@ -1,4 +1,4 @@
-With PrettyColorPrinter, you can print numpy arrays / pandas dataframe / list / dicts / tuple! Shows the path to all items! It works even with nested objects.
+**With PrettyColorPrinter, you can print numpy arrays / pandas dataframe / list / dicts / tuple! Shows the path to all items! It works even with nested objects.**
 
 Very easy to use:
 
@@ -8,7 +8,7 @@ Very easy to use:
     
 <img src="screenshot.png"/>
 
-Try this code:
+**Try this code**:</br>
 <img src="a1.png"/>
 <img src="a2.png"/>
 <img src="a3.png"/>
