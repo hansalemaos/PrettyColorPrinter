@@ -9,8 +9,8 @@ Very easy to use:
 <img src="screenshot.png"/>
 
 Try this code:
-<img src="a1"/>
-<img src="a2"/>
-<img src="a3"/>
-<img src="a4"/>
-<img src="a5"/>
+<img src="a1.png"/>
+<img src="a2.png"/>
+<img src="a3.png"/>
+<img src="a4.png"/>
+<img src="a5.png"/>
