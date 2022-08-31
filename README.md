@@ -1,5 +1,9 @@
 **With PrettyColorPrinter, you can print numpy arrays / pandas dataframe / list / dicts / tuple! Shows the path to all items! It even works with nested objects.**
 
+```python
+pip install PrettyColorPrinter
+```
+
 Very easy to use:
 
 ```python
