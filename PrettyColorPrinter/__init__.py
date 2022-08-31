@@ -1,3 +1,4 @@
+from collections import defaultdict
 import numpy as np
 from regex import regex
 from varname import (
@@ -7,13 +8,26 @@ from itertools import cycle, islice
 import pandas as pd
 from cprinter import TC  # pip install cprinter
 
-len_array = np.frompyfunc(len, 1, 1)
-regex_endvalue1 = regex.compile(r"""^\s*(['"])""")
+from input_timeout import InputTimeout
 
+
+def getmaxlen(nparr):
+    return str(nparr)
+
+
+def allmax(nparr):
+    return np.max(nparr)
+
+
+getma = np.vectorize(getmaxlen)
+getmaxone = np.vectorize(allmax)
+len_array = np.frompyfunc(len, 1, 1)
+regex_endvalue1 = regex.compile(r"""^\W*(['"])""")
 regex_endvalue2 = regex.compile(r"""^\s*[\\'"]{0,3}""")
-regex_endvalue3 = regex.compile(r"""[\\'"]{0,3}\s*$""")
+regex_endvalue3 = regex.compile(r"""[\\'"]+\W*$""")
 regex_klammern = regex.compile(r"(\]\[|\[|\])")
 nullend = regex.compile(r"\[0\]$")
+nested_dict = lambda: defaultdict(nested_dict)
 
 
 def _get_colors(len_numpyarray):
@@ -37,18 +51,6 @@ def _get_colors(len_numpyarray):
     ]
     neuefarben = list(repeatlist(allefarben, len_numpyarray * 2))
     return neuefarben
-
-
-def getmaxlen(nparr):
-    return str(nparr)
-
-
-def allmax(nparr):
-    return np.max(nparr)
-
-
-getma = np.vectorize(getmaxlen)
-getmaxone = np.vectorize(allmax)
 
 
 def isiter(objectX):
@@ -88,9 +90,7 @@ def get_longest_item(item):
 
     try:
         item = np.array(
-            np.array(
-                [(x) if not isiter(x) else [xas for xas in x] for x in item],
-            )
+            np.array([(x) if not isiter(x) else [xas for xas in x] for x in item],)
         )
     except:
         pass
@@ -99,7 +99,6 @@ def get_longest_item(item):
     try:
         item = item.T.flatten().reshape((shapetouse, -1))
     except Exception as Fehler:
-        # print(Fehler)
         pass
     strar = [[str(pp) for pp in x] for x in (item)]
     lenar = len_array(strar)
@@ -115,23 +114,13 @@ def transpose_list_of_lists(listexxx):
     try:
         return [list(xaaa) for xaaa in zip(*listexxx)]
     except Exception as Fehler:
-        print(Fehler)
         try:
             return np.array(listexxx).T.tolist()
         except Exception as Fehler:
-            print(Fehler)
             return listexxx
 
 
-def turnaround(item):
-    if not isinstance(item, np.ndarray):
-        item = np.asarray(item)
-
-    item = item.T
-    return item
-
-
-def get_rightindexlist(arrayname, leveldeep, indent_, fixedcolsize=None, dimensions=1):
+def get_rightindexlist(arrayname, leveldeep, fixedcolsize=None, dimensions=1):
     indtoprint = (
         str(arrayname)
         + "["
@@ -145,7 +134,13 @@ def get_rightindexlist(arrayname, leveldeep, indent_, fixedcolsize=None, dimensi
     else:
         le = fixedcolsize
     indtoprint_ajusted = indtoprint.rjust(le).ljust(le)
+
     return le, indtoprint_ajusted[:le]
+
+
+def get_path(leveldeep):
+    indtoprint = "[" + "][".join([str(x) for x in leveldeep]) + "]"
+    return indtoprint
 
 
 def get_np_colors(subitem, intotal):
@@ -175,16 +170,19 @@ def printdict(v, prefix="", repr_or_string="str"):
                 p2 = "{}[{}]".format(prefix, i)
                 aa_flatten_dict(v2, p2, repr_or_string)
         else:
-            if repr_or_string == "repr":
-                endvalue = repr(v)
+            if not isiter(v):
+                if repr_or_string == "repr":
+                    endvalue = repr(v)
+                else:
+                    endvalue = str(v)
+                if isinstance(v, str):
+                    endvalue = regex_endvalue1.sub(r"\g<1>", endvalue)
+
+                    endvalue = regex_endvalue2.sub('"', endvalue)
+
+                    endvalue = regex_endvalue3.sub('"', endvalue)
             else:
-                endvalue = str(v)
-            if isinstance(v, str):
-                endvalue = regex_endvalue1.sub("\\" + r"\g<1>", endvalue)
-
-                endvalue = regex_endvalue2.sub('"', endvalue)
-
-                endvalue = regex_endvalue3.sub('"', endvalue)
+                endvalue = v
 
             indtoprint = regex_klammern.split(prefix)
             npcolors = get_np_colors(indtoprint, indtoprint)
@@ -196,7 +194,8 @@ def printdict(v, prefix="", repr_or_string="str"):
                 results[prefix]["prefo"] = prefix
                 results[prefix]["len"] = len(prefix)
                 results[prefix]["keys"] = []
-                results[prefix]["value"] = TC(f"{endvalue}").fg_lightgrey.fg_black.bold
+                results[prefix]["value"] = endvalue
+                # results[prefix]["value"] = TC(f"{endvalue}").fg_lightgrey.fg_black.bold
 
             for indi0, indii in enumerate(indtoprint):
                 if any(regex_klammern.findall(indii)):
@@ -209,25 +208,31 @@ def printdict(v, prefix="", repr_or_string="str"):
     new_d = {}
     for k in sorted(results, key=len, reverse=False):
         new_d[k] = results[k]
+    arrname = ""
     for k, v in new_d.items():
         for pref in v["keys"]:
             print(pref, end="")
+            arrname = arrname + str(pref)
+            # print(TC(f"{pref}").bg_lightgrey.fg_black, end="")
         print(((maxlen_di + 4) - v["len"]) * " ", end="")
         print("= ", end="")
-        print(v["value"], end="")
+        if not isiter(v["value"]):
+            print(
+                TC(
+                    f'{v["value"]}'.replace("\n", "\\n").replace("\r", "\\r")
+                ).bg_lightgrey.fg_black,
+                end="",
+            )
+        else:
+            print("\n")
+            numpyprinter(v["value"], arrayname=arrname)
+        # print(v["value"], end="")
+        arrname = ""
         print("", end="\n")
 
 
 def get_blackblock():
     return TC("█").fg_black.bg_black
-
-
-def get_lightgrey_block():
-    return TC("█").fg_lightgrey.bg_black
-
-
-def print_light_grey_block():
-    print(get_lightgrey_block(), end="")
 
 
 def get_purple_block():
@@ -236,10 +241,6 @@ def get_purple_block():
 
 def print_purple_block():
     print(get_purple_block(), end="")
-
-
-def print_sep_block():
-    print(get_sep_block(), end="")
 
 
 def get_sep_block():
@@ -258,6 +259,9 @@ def numpyprinter(
     isdf=False,
     fixedcolsize=None,
     dimensions=1,
+    reshape_big_1_dim_arrays=0,  # 0 == no reshaping
+    when_to_take_a_break=0,  # 0 == no break
+    break_how_long=5,
 ):
     firstitem = False
     if leveldeep is None:
@@ -277,7 +281,7 @@ def numpyprinter(
     if isinstance(wholearray, (dict)):
         print("\n", end="")
         _, indtoprint = get_rightindexlist(
-            arrayname, leveldeep[1:] + [0], indent_, fixedcolsize=None
+            arrayname, leveldeep[1:] + [0], fixedcolsize=None
         )
         indtoprint = indtoprint.strip()
         if firstitem:
@@ -292,6 +296,27 @@ def numpyprinter(
     spacing = (
         "                                                                            "
     )
+    if reshape_big_1_dim_arrays > 0 and wholearray.ndim <= 1 and firstitem:
+        try:
+            wholearray = dfnp.flatten()
+
+            forreshape = 1
+            reshape_big_1_dimension_arrays = 19
+            for reshape_big_1_dimension_arrays_ in reversed(
+                range(1, reshape_big_1_dimension_arrays)
+            ):
+                if wholearray.flatten().shape[0] % reshape_big_1_dimension_arrays_ == 0:
+                    forreshape = reshape_big_1_dimension_arrays_
+                    break
+
+            wholearray = wholearray.reshape((-1, forreshape))
+            print(
+                TC(
+                    f"\nBe careful!!Array was reshaped from {dfnp.shape} to {wholearray.shape}! \nThat means the index values that you see on the left side of each column (e.g. a[0][0]) are invalid for the original array!\n"
+                ).fg_red.bg_black.bold.underline
+            )
+        except Exception:
+            pass
 
     if isiter(wholearray):
         npcolors = None
@@ -320,13 +345,12 @@ def numpyprinter(
                 if not withindent:
                     indent_ = ""
                 itemtoprint = (
-                    itemtoprint.replace("\n", " ").replace("\r", " ") + spacing
+                    itemtoprint.replace("\n", "\\n").replace("\r", "\\r") + spacing
                 )[:longi]
                 if fixedcolsize is None:
                     fixedcolsize, indtoprint = get_rightindexlist(
                         arrayname,
                         leveldeep[1:],
-                        indent_,
                         fixedcolsize=fixedcolsize,
                         dimensions=dimensions,
                     )
@@ -334,7 +358,6 @@ def numpyprinter(
                     _, indtoprint = get_rightindexlist(
                         arrayname,
                         leveldeep[1:],
-                        indent_,
                         fixedcolsize=fixedcolsize,
                         dimensions=dimensions,
                     )
@@ -346,7 +369,6 @@ def numpyprinter(
                         fixedcolsize, indtoprint = get_rightindexlist(
                             arrayname,
                             leveldeep[1:] + [indi0],
-                            indent_,
                             fixedcolsize=fixedcolsize,
                             dimensions=dimensions,
                         )
@@ -354,7 +376,6 @@ def numpyprinter(
                         _, indtoprint = get_rightindexlist(
                             arrayname,
                             leveldeep[1:] + [indi0],
-                            indent_,
                             fixedcolsize=fixedcolsize,
                             dimensions=dimensions,
                         )
@@ -372,7 +393,6 @@ def numpyprinter(
                         fixedcolsize, indtoprint = get_rightindexlist(
                             arrayname,
                             leveldeep[1:] + [len(intotal)],
-                            indent_,
                             fixedcolsize=fixedcolsize,
                             dimensions=dimensions,
                         )
@@ -380,17 +400,22 @@ def numpyprinter(
                         _, indtoprint = get_rightindexlist(
                             arrayname,
                             leveldeep[1:] + [len(intotal)],
-                            indent_,
                             fixedcolsize=fixedcolsize,
                             dimensions=dimensions,
                         )
-                    row_ = f"{indent_}{indtoprint}{get_sep_block()}{get_blackblock()}{get_blackblock()}"
-                    row2 = f"{itemtoprint.ljust(longi).rjust(longi)}  "
 
+                    row_ = f"{indent_}{indtoprint}{get_sep_block()}{get_blackblock()}{get_blackblock()}"
                     print(TC(row_).fg_darkgrey.bg_black, end="")
 
-                    func = getattr(TC(f"{row2}"), npcolors[indi0])
-                    print(func.bg_black, end="")
+                    try:
+                        row2 = f"{itemtoprint.ljust(longi).rjust(longi)}  "
+                        func = getattr(TC(f"{row2}"), npcolors[indi0])
+                        print(func.bg_black, end="")
+                    except Exception:
+                        itemtoprint = f"Could not print"
+                        row2 = f"{itemtoprint.ljust(longi).rjust(longi)}  "
+                        func = getattr(TC(f"{row2}"), npcolors[indi0])
+                        print(func.bg_black, end="")
 
                     print_purple_block()
                     intotal.append(1)
@@ -400,6 +425,22 @@ def numpyprinter(
 
                 leveldeepold = leveldeep.copy()
                 leveldeep = leveldeep + [indi0]
+                if when_to_take_a_break != 0:
+                    try:
+                        if leveldeep[-1] % when_to_take_a_break == 0:
+                            ixxx = InputTimeout(
+                                timeout=break_how_long,
+                                input_message="Any key to continue",
+                                timeout_message="",
+                                defaultvalue="CONTINUE",
+                                cancelbutton=None,
+                                show_special_characters_warning=None,
+                            ).finalvalue
+                            print("\n")
+                            if ixxx != "CONTINUE".strip() and ixxx != "".strip():
+                                return
+                    except Exception as Feh:
+                        pass
 
                 if indi0 == 0:
                     indtoprint = "[0]"
@@ -424,6 +465,9 @@ def numpyprinter(
                             isdf=isdf,
                             max_col_width=max_col_width,
                             fixedcolsize=fixedcolsize,
+                            reshape_big_1_dim_arrays=reshape_big_1_dim_arrays,
+                            when_to_take_a_break=when_to_take_a_break,
+                            break_how_long=break_how_long,
                         )
                     else:
                         leerzeile = numpyprinter(
@@ -437,6 +481,9 @@ def numpyprinter(
                             isdf=isdf,
                             max_col_width=max_col_width,
                             fixedcolsize=fixedcolsize,
+                            reshape_big_1_dim_arrays=reshape_big_1_dim_arrays,
+                            when_to_take_a_break=when_to_take_a_break,
+                            break_how_long=break_how_long,
                         )
 
                 else:
@@ -451,6 +498,9 @@ def numpyprinter(
                         isdf=isdf,
                         max_col_width=max_col_width,
                         fixedcolsize=fixedcolsize,
+                        reshape_big_1_dim_arrays=reshape_big_1_dim_arrays,
+                        when_to_take_a_break=when_to_take_a_break,
+                        break_how_long=break_how_long,
                     )
 
                 if leerzeile == " ":
@@ -465,7 +515,15 @@ def numpyprinter(
     return "  "
 
 
-def pdp(dframe, max_column_size=50, repeat_cols=0, printasnp=False):
+def pdp(
+    dframe,
+    max_column_size=50,
+    repeat_cols=70,
+    printasnp=False,
+    reshape_big_1_dim_arrays=0,
+    when_to_take_a_break=0,
+    break_how_long=5,
+):
     try:
         arrayname = argname("dframe")
     except:
@@ -475,7 +533,13 @@ def pdp(dframe, max_column_size=50, repeat_cols=0, printasnp=False):
             dframe = dframe.values
             arrayname = f"{arrayname}.iloc"
         numpyprinter(
-            dframe, max_col_width=max_column_size, arrayname=arrayname, withindent=False
+            dframe,
+            max_col_width=max_column_size,
+            arrayname=arrayname,
+            withindent=False,
+            reshape_big_1_dim_arrays=reshape_big_1_dim_arrays,
+            when_to_take_a_break=when_to_take_a_break,
+            break_how_long=break_how_long,
         )
         return
 
@@ -484,7 +548,14 @@ def pdp(dframe, max_column_size=50, repeat_cols=0, printasnp=False):
     else:
         df = dframe
     if not isinstance(df, (pd.core.frame.DataFrame, pd.core.frame.Series)):
-        numpyprinter(df, max_col_width=max_column_size, arrayname=arrayname)
+        numpyprinter(
+            df,
+            max_col_width=max_column_size,
+            arrayname=arrayname,
+            reshape_big_1_dim_arrays=reshape_big_1_dim_arrays,
+            when_to_take_a_break=when_to_take_a_break,
+            break_how_long=break_how_long,
+        )
         return
     if len(list(dict.fromkeys(df.columns.to_list()))) != len(df.columns.to_list()):
         numpyprinter(
@@ -492,6 +563,9 @@ def pdp(dframe, max_column_size=50, repeat_cols=0, printasnp=False):
             max_col_width=max_column_size,
             arrayname=f"{arrayname}.iloc",
             withindent=False,
+            reshape_big_1_dim_arrays=reshape_big_1_dim_arrays,
+            when_to_take_a_break=when_to_take_a_break,
+            break_how_long=break_how_long,
         )
         return
 
@@ -518,12 +592,13 @@ def pdp(dframe, max_column_size=50, repeat_cols=0, printasnp=False):
         maxindexsize = 9
 
     columnsprint = [
-        str(f"{col}").replace("\n", " ").replace("\r", " ")[:size].rjust(size + 1)
+        str(f"{col}").replace("\n", "\\n").replace("\r", "\\r")[:size].rjust(size + 1)
         for col, size in zip(df.columns, maxsize_)
     ]
     columnsprint.insert(0, "index".ljust(maxindexsize + 1))
     _print_cols()
     colprintcounter = 0
+    breakmaker = 0
     npcolors = _get_colors(len(maxsize))
 
     for indi, row in zip(df.index, df.__array__()):
@@ -531,10 +606,29 @@ def pdp(dframe, max_column_size=50, repeat_cols=0, printasnp=False):
         emptyline = 0
         indi_ = (
             str(f" {indi}")
-            .replace("\n", " ")
-            .replace("\r", " ")[:maxindexsize]
+            .replace("\n", "\\n")
+            .replace("\r", "\\r")[:maxindexsize]
             .ljust(maxindexsize + 1)
         )
+        breakmaker = breakmaker + 1
+        if when_to_take_a_break != 0:
+            if when_to_take_a_break == breakmaker:
+                breakmaker = 0
+                try:
+                    ixxx = InputTimeout(
+                        timeout=break_how_long,
+                        input_message="Any key to continue",
+                        timeout_message="",
+                        defaultvalue="CONTINUE",
+                        cancelbutton=None,
+                        show_special_characters_warning=None,
+                    ).finalvalue
+                    print("\n")
+                    if ixxx != "CONTINUE".strip() and ixxx != "".strip():
+                        return
+                except Exception as Feh:
+                    pass
+
         colprintcounter = colprintcounter + 1
         if repeat_cols != 0:
             if repeat_cols <= colprintcounter:
@@ -544,45 +638,88 @@ def pdp(dframe, max_column_size=50, repeat_cols=0, printasnp=False):
         print(TC("█").fg_blue.bg_black, end="")
 
         for r, size, color in zip(row, maxsize_, npcolors):
-            row_ = str(f"  {r}").replace("\n", " ").replace("\r", " ") + " " * size
+            row_ = str(f"  {r}").replace("\n", "\\n").replace("\r", "\\r") + " " * size
             row_ = row_[:size].rjust(size + 1).ljust(size + 1)
-            func = getattr(TC(f"{row_}  "), color)
-            emptyline = emptyline + 1
-            print(func.bg_black, end="")
+            try:
+                func = getattr(TC(f"{row_}  "), color)
+                print(func.bg_black, end="")
+            except Exception:
+                row_ = (
+                    str(f"  Could not print  ")
+                    .replace("\n", "\\n")
+                    .replace("\r", "\\r")
+                    + " " * size
+                )
+                row_ = row_[:size].rjust(size + 1).ljust(size + 1)
+                func = getattr(TC(f"{row_}  "), color)
+                print(func.bg_black, end="")
             print(TC("█").fg_yellow.bg_black, end="")
+            emptyline = emptyline + 1
 
         print("", end="\n")
 
 
+def flattenlist_neu(iterable, types=(list, tuple)):
+    def iter_flatten(iterable):
+        it = iter(iterable)
+        for e in it:
+            if isinstance(e, types):
+                for f in iter_flatten(e):
+                    yield f
+            else:
+                yield e
+
+    a = [i for i in iter_flatten(iterable)]
+    return a
+
+
 if __name__ == "__main__":
-    print("Testing")
-    df = pd.read_csv(
-        "https://raw.githubusercontent.com/pandas-dev/pandas/main/doc/data/titanic.csv"
-    )
-    df = df[:30]
-    print("Regular Dataframe")
-    pdp(df, max_column_size=75, repeat_cols=20)
-    print("Dataframe as Numpy")
-    pdp(df, max_column_size=75, repeat_cols=20, printasnp=True)
-    print("Transposed DF as Numpy")
-    dftr = df.T
-    pdp(dftr, max_column_size=75, repeat_cols=20)
-    print("values (pandas)")
-    dfvals = df.values
-    pdp(dfvals, max_column_size=75, repeat_cols=20)
-    print("array np (pandas)")
-    dfvarr = df.__array__()
-    pdp(dfvarr, max_column_size=75, repeat_cols=20)
-    print("dict")
-    dfdict = df.to_dict()
-    pdp(dfdict, max_column_size=75, repeat_cols=20)
-    print("records from df (tuple/list)")
-    dfrec = df.to_records()
-    pdp(dfrec, max_column_size=75, repeat_cols=20)
-    dfrecl = df.to_records().tolist()
-    pdp(dfrecl, max_column_size=75, repeat_cols=20)
-    dfrect = tuple(df.to_records().tolist())
-    pdp(dfrect, max_column_size=25, repeat_cols=20)
-    print("pd to numpy")
-    dfnp = df.to_numpy()
-    pdp(dfnp, max_column_size=25, repeat_cols=20)
+    do_test = False
+    if do_test:
+        print("Testing")
+        df = pd.read_csv(
+            "https://raw.githubusercontent.com/pandas-dev/pandas/main/doc/data/titanic.csv"
+        )
+        df = df[:40]
+        print(
+            "Regular Dataframe, take a break of 1 sec every 20 lines, can be pulled by pressing enter, any other key + enter will stop the printing"
+        )
+        pdp(
+            df,
+            max_column_size=75,
+            repeat_cols=20,
+            when_to_take_a_break=20,
+            break_how_long=10,
+        )
+        print("Dataframe as Numpy")
+        pdp(df, max_column_size=75, repeat_cols=20, printasnp=True)
+        print("Transposed DF as Numpy")
+        dftr = df.T
+        pdp(dftr, max_column_size=75, repeat_cols=20)
+        print("values (pandas)")
+        dfvals = df.values
+        pdp(dfvals, max_column_size=75, repeat_cols=20)
+        print("array np (pandas)")
+        dfvarr = df.__array__()
+        pdp(dfvarr, max_column_size=75, repeat_cols=20)
+        print("dict")
+        dfdict = df.to_dict()
+        pdp(dfdict, max_column_size=75, repeat_cols=20)
+        print("records from df (tuple/list)")
+        dfrec = df.to_records()
+        pdp(dfrec, max_column_size=75, repeat_cols=20)
+        dfrecl = df.to_records().tolist()
+        pdp(dfrecl, max_column_size=75, repeat_cols=20)
+        dfrect = tuple(df.to_records().tolist())
+        pdp(dfrect, max_column_size=25, repeat_cols=20)
+        print("pd to numpy")
+        dfnp = df.to_numpy()
+        pdp(dfnp, max_column_size=25, repeat_cols=20)
+        pdp(dfnp.flatten(), reshape_big_1_dim_arrays=10)
+        user_dict = {}
+        user_dict[12] = {
+            "Category 1": {"att_1": 1, "att_2": df.__array__()},
+            "Category 2": {"att_1": 23, "att_2": df.to_numpy()},
+        }
+
+        pdp(user_dict, repeat_cols=50)

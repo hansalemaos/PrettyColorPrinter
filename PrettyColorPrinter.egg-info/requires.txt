@@ -1,0 +1,6 @@
+numpy
+varname
+regex
+pandas
+cprinter
+input-timeout

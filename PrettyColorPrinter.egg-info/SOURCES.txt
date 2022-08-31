@@ -1,0 +1,8 @@
+README.md
+setup.py
+PrettyColorPrinter/__init__.py
+PrettyColorPrinter.egg-info/PKG-INFO
+PrettyColorPrinter.egg-info/SOURCES.txt
+PrettyColorPrinter.egg-info/dependency_links.txt
+PrettyColorPrinter.egg-info/requires.txt
+PrettyColorPrinter.egg-info/top_level.txt
