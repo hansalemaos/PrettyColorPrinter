@@ -52,7 +52,7 @@ Very easy to use:
         pdp(user_dict, repeat_cols=50)
 ```
 
-@
+
 
 <img title="" src="https://github.com/hansalemaos/PrettyColorPrinter/raw/main/a1.png" alt="">
 <img title="" src="https://github.com/hansalemaos/PrettyColorPrinter/raw/main/a2.png" alt="">
