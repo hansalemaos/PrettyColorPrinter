@@ -1,62 +1,89 @@
-**With PrettyColorPrinter, you can print numpy arrays / pandas dataframe / list / dicts / tuple! Shows the path to all items! It even works with nested objects.**
+# **Print colored Numpy arrays / pandas DataFrames / Pandas Series / lists / dicts / tuples! **
 
 ```python
 pip install PrettyColorPrinter
 ```
 
-Very easy to use:
+#### **This is everything you have to do to use PrettyColorPrinter with pandas**
 
 ```python
-        print("Testing")
-        df = pd.read_csv(
-            "https://raw.githubusercontent.com/pandas-dev/pandas/main/doc/data/titanic.csv"
-        )
-        df = df[:40]
-        print(
-            "Regular Dataframe, take a break of 1 sec every 20 lines, can be pulled by pressing enter, any other key + enter will stop the printing"
-        )
-        pdp(
-            df,
-            max_column_size=75,
-            repeat_cols=20,
-            when_to_take_a_break=20,
-            break_how_long=10,
-        )
-        print("Dataframe as Numpy")
-        pdp(df, max_column_size=75, repeat_cols=20, printasnp=True)
-        print("Transposed DF as Numpy")
-        dftr = df.T
-        pdp(dftr, max_column_size=75, repeat_cols=20)
-        print("values (pandas)")
-        dfvals = df.values
-        pdp(dfvals, max_column_size=75, repeat_cols=20)
-        print("array np (pandas)")
-        dfvarr = df.__array__()
-        pdp(dfvarr, max_column_size=75, repeat_cols=20)
-        print("dict")
-        dfdict = df.to_dict()
-        pdp(dfdict, max_column_size=75, repeat_cols=20)
-        print("records from df (tuple/list)")
-        dfrec = df.to_records()
-        pdp(dfrec, max_column_size=75, repeat_cols=20)
-        dfrecl = df.to_records().tolist()
-        pdp(dfrecl, max_column_size=75, repeat_cols=20)
-        dfrect = tuple(df.to_records().tolist())
-        pdp(dfrect, max_column_size=25, repeat_cols=20)
-        print("pd to numpy")
-        dfnp = df.to_numpy()
-        pdp(dfnp, max_column_size=25, repeat_cols=20)
-        pdp(dfnp.flatten(), reshape_big_1_dim_arrays=10)
-        user_dict = {}
-        user_dict[12] = {
-            "Category 1": {"att_1": 1, "att_2": df.__array__()},
-            "Category 2": {"att_1": 23, "att_2": df.to_numpy()},
-        }
+from a_pandas_ex_color_print import add_printer
+add_printer() #This function will add some methods to PandasObject
 
-        pdp(user_dict, repeat_cols=50)
+#Let’s import pandas and create a DataFrame:
+
+import pandas as pd
+df=pd.read_csv(r"https://github.com/pandas-dev/pandas/raw/main/doc/data/air_quality_no2_long.csv")
 ```
 
+<img title="" src="https://github.com/hansalemaos/PrettyColorPrinter/raw/main/a11.png" alt="">
 
+
+
+**All methods added to pandas start either with:**
+
+- **ds_** (for DataFrames and Series)
+
+- **s_** (only for Series) 
+
+- **d_** (only for DataFrames)
+
+### **All methods that are added to PandasObject**
+
+- **ds_color_print**
+
+- **ds_color_print_all**
+
+- **d_color_print_columns**
+
+- **d_color_print_index**
+
+- **ds_color_print_all_with_break**
+
+- **ds_color_print_context**
+
+```python
+#If you want to see some examples:
+from a_pandas_ex_color_print import print_test_from_pandas_github
+print_test_from_pandas_github()
+
+#If you need help
+help(df.ds_color_print)
+qq_ds_print(max_rows: int = 1000, max_colwidth: int = 300, repeat_cols: int = 70, asnumpy: bool = False, returndf: bool = False) -> Union[pandas.core.frame.DataFrame, pandas.core.series.Series, NoneType] method of pandas.core.frame.DataFrame instance
+    Parameters
+    ----------
+    df : pd.DataFrame, pd.Series
+        Array to print
+    max_rows : int
+        Stop printing after n lines (default is 1000)
+    max_colwidth : int
+        Width of each column (default is 300)
+    repeat_cols : int (default is 70)
+        Print columns again after n lines  (default is 70)
+    asnumpy: bool (default is False)
+        Converts pandas DataFrame to np before printing.
+        If there are duplicated columns in a Pandas DataFrame,
+        it changes to printasnp = True  (default is False)
+    returndf:  bool (default is False)
+        return the input DataFrame to allow chaining
+
+
+```
+
+### Using PrettyColorPrinter without pandas
+
+**
+
+The function **pdp** can be used without pandas.   
+Doing it this way, you are not restricted to PandasObjects.
+
+**You can print lists, dicts, tuples, np.arrays, pd.DataFrames and pd.Series**
+
+**
+
+```python
+from a_pandas_ex_color_print import pdp
+```
 
 <img title="" src="https://github.com/hansalemaos/PrettyColorPrinter/raw/main/a1.png" alt="">
 <img title="" src="https://github.com/hansalemaos/PrettyColorPrinter/raw/main/a2.png" alt="">
