@@ -1,0 +1,3 @@
+include PrettyColorPrinter/requirements.txt
+include PrettyColorPrinter/thirdparty.json
+include PrettyColorPrinter/C:/m_i_t.txt
