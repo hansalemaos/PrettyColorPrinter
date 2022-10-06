@@ -20,21 +20,46 @@ df=pd.read_csv(r"https://github.com/pandas-dev/pandas/raw/main/doc/data/air_qual
 
 ```python
 add_printer(overwrite_pandas_printer=False)
-    """
-    If you pass overwrite_pandas_printer=True then the color printer will replace __str__ and __repr__ from pandas
+If you pass overwrite_pandas_printer=True then the color printer will replace __str__ and __repr__ from pandas
 
-    You can configure the color printer using:
-        pd.color_printer_activate(print_stop:int=69,max_colwidth:int=300,repeat_cols:int=70)
-        print_stop = maximum lines to print
-        max_colwidth = maximum column width
-        repeat_cols = for better readability, the columns are printed each x row
+You can configure the color printer using:
+     pd.color_printer_activate(print_stop:int=69,max_colwidth:int=300,repeat_cols:int=70)
+     print_stop = maximum lines to print
+     max_colwidth = maximum column width
+     repeat_cols = for better readability, the columns are printed each x row
 
 
     This is how you switch back and forth between standard pandas and color printer:
-        pd.color_printer_reset() #to standard pandas
-        pd.color_printer_activate() #to color printer
-    """
+      pd.color_printer_reset() #to standard pandas
+      pd.color_printer_activate() #to color printer
+
 ```
+
+### Have a look
+
+```python
+from PrettyColorPrinter import add_printer
+from a_pandas_ex_plode_tool import pd_add_explode_tools
+import pandas as pd
+pd_add_explode_tools()
+add_printer(overwrite_pandas_printer=True)
+data={'critic_reviews': [{'review_critic': 'XYZ', 'review_score': 90},
+                    {'review_critic': 'ABC', 'review_score': 90},
+                    {'review_critic': '123', 'review_score': 90}],
+ 'genres': ['Sports', 'Golf'],
+ 'score': 85,
+ 'title': 'Golf Simulator',
+ 'url': 'http://example.com/golf-simulator'}
+df = pd.Q_AnyNestedIterable_2df(data,unstack=False) #multiindex 
+df2 = df.d_unstack() #normal index
+df #if you type df, you will get a colored dataframe instead of the regular pandas version
+```
+
+![](https://github.com/hansalemaos/PrettyColorPrinter/raw/main/a12.png)
+
+![](https://github.com/hansalemaos/PrettyColorPrinter/raw/main/a13.png)
+
+
 
 <img title="" src="https://github.com/hansalemaos/PrettyColorPrinter/raw/main/a11.png" alt="">
 
