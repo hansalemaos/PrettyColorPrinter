@@ -495,6 +495,160 @@ def numpyprinter(
     return "  "
 
 
+def _get_colors_bg(len_numpyarray):
+    def repeatlist(it, count):
+        return islice(cycle(it), count)
+
+    allefarben = [
+        "bg_cyan",
+        "bg_green",
+        "bg_purple",
+        "bg_orange",
+    ]
+    allefarben2 = [
+        "fg_cyan",
+        "fg_green",
+        "fg_purple",
+        "fg_orange",
+    ]
+    neuefarben = list(repeatlist(allefarben, len_numpyarray * 2))
+    neuefarben2 = list(repeatlist(allefarben2, len_numpyarray * 2))
+
+    return neuefarben, neuefarben2
+
+
+def series_to_dataframe(
+    df: Union[pd.Series, pd.DataFrame]
+) -> (Union[pd.Series, pd.DataFrame], bool):
+    dataf = df.copy()
+    isseries = False
+    if isinstance(dataf, pd.Series):
+        columnname = dataf.name
+        dataf = dataf.to_frame()
+
+        try:
+            dataf.columns = [columnname]
+        except Exception:
+            dataf.index = [columnname]
+            dataf = dataf.T
+        isseries = True
+
+    return dataf, isseries
+
+
+def print_df_with_multiindex(df, max_colwidth=300):
+    gruppiert, isser = series_to_dataframe(df)
+
+    # das = lambda x: choice(['q23', '5235234534534534634643563543', 'dddddddd'])
+    # gruppiert['vbasaxa'] = gruppiert['vbasa'].apply(das)
+    allindexlen = []
+    for __x in range(len(gruppiert.index[0])):
+        allindexlen.append(
+            len(sorted([str(x[__x]) for x in gruppiert.index], key=len)[-1])
+        )
+    valuelen = [
+        gruppiert[x].astype("string").__array__().astype("U").itemsize // 4
+        for x in gruppiert.columns
+    ]
+    valuelen = [
+        len(str(x)) if len(str(x)) > y else y
+        for x, y in zip(gruppiert.columns, valuelen)
+    ]
+    valuelen = [
+        len(str(x)) if len(str(x)) > y else y
+        for x, y in zip(gruppiert.columns, valuelen)
+    ]
+    valuelen = [x if x < max_colwidth else max_colwidth for x in valuelen]
+    allindexlen = [x if x < max_colwidth else max_colwidth for x in allindexlen]
+    valuegrup = gruppiert.__array__()
+    indi = list(gruppiert.index)
+    alt = []
+    addextraspace = 2 if len(allindexlen) % 2 == 0 else 1
+    allcolumns = (
+        addextraspace*' '+str(
+            str("    MULTIINDEX" + (' ' * sum([_+5 for _ in allindexlen])) + 8*' ' + ''*len(allindexlen))[:sum(allindexlen) +(len(allindexlen)* 8) + 8]
+            + "█"
+            + "█".join(
+                [
+                    str(f"    {x}  " + (y*4*"  ")).rjust(1).ljust(y*2)[:y + 8]
+                    for x, y in zip(gruppiert.columns, valuelen)
+                ]
+            )
+            + "█"
+        )
+        .replace("\n", "\\n")
+        .replace("\r", "\\r")
+    )
+    print(TC(allcolumns).fg_black.bg_red, end="\n")
+    for ini, bb in enumerate(indi):
+        print(str(ini).rjust(7), end="")
+        if ini == 0:
+            alt = ["" for ___ in range(len(bb))]
+        npcolors = _get_colors(len(valuegrup[ini]))
+        npcolorsindex, npcolorsindex_switched = _get_colors_bg(len(bb))
+
+        for ini1, va1, altindex in zip(range(len(bb)), bb, alt):
+            if len(set(list(bb[:ini1])) & set(list(alt[:ini1]))) == (
+                len(list(bb[:ini1]))
+                # len(bb[:ini1]),
+            ):
+                if va1 != altindex:
+                    row2 = (
+                        ((str(va1)).rjust(1).ljust(allindexlen[ini1] + 2))
+                        .replace("\n", "\\n")
+                        .replace("\r", "\\r")
+                    )[: allindexlen[ini1] + 2]
+                    func = getattr(TC(f"    {row2}  "), npcolorsindex[ini1])
+                    print(func.fg_black.bold, end="")
+                    print(TC(rf"█").fg_black.bg_black, end="")
+                else:
+
+                    row2 = (
+                        (str(va1).rjust(1).ljust(allindexlen[ini1] + 2))
+                        .replace("\n", "\\n")
+                        .replace("\r", "\\r")
+                    )[: allindexlen[ini1] + 2]
+                    func = getattr(TC(f"    {row2}  "), npcolorsindex_switched[ini1])
+                    print(func.bg_black.bold, end="")
+                    print(TC("█").fg_black.bg_black, end="")
+            else:
+                row2 = (
+                    str(va1)
+                    .rjust(1)
+                    .ljust(allindexlen[ini1] + 2)
+                    .replace("\n", "\\n")
+                    .replace("\r", "\\r")
+                )[: allindexlen[ini1] + 2]
+                func = getattr(TC(f"    {row2}  "), npcolorsindex[ini1])
+                print(func.fg_black.bold, end="")
+                print(TC("█").fg_black.bg_black, end="")
+
+        for ini0, va in enumerate(valuegrup[ini]):
+            row2 = (
+                (str(va).rjust(1).ljust(valuelen[ini0] + 2))
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+            )[: valuelen[ini0] + 2]
+            func = getattr(TC(f"    {row2}  "), npcolors[ini0])
+            print(func.bg_black, end="")
+            print(TC("█").fg_orange.bg_black, end="")
+
+        print("")
+        alt = bb
+    if not isser:
+        pdp(
+            pd.DataFrame(
+                [df.shape[0], df.shape[1]], index=["rows", "columns"]
+            ).T.rename({0: "DataFrame"},),
+            print_shape=False,
+        )
+    else:
+        pdp(
+            pd.DataFrame([df.shape[0]], index=["rows"]).T.rename({0: "Series"}),
+            print_shape=False,
+        )
+
+
 def pdp(
     dframe: Any,
     max_colwidth: int = 50,
@@ -503,6 +657,7 @@ def pdp(
     reshape_big_1_dim_arrays: int = 0,
     when_to_take_a_break: int = 0,
     break_how_long: int = 5,
+    print_shape=True,
 ) -> None:
     """
     Parameters
@@ -528,8 +683,13 @@ def pdp(
         time to sleep, can be interrupted by pressing ENTER or ANY KEY + ENTER to break
 
         """
+    isser = False
     max_column_size = max_colwidth
     arrayname = "a"
+    if isinstance(dframe, (pd.DataFrame, pd.Series)):
+        if isinstance(dframe.index[0], tuple):
+            print_df_with_multiindex(dframe, max_colwidth=max_column_size)
+            return
     if printasnp:
         if isinstance(dframe, (pd.DataFrame, pd.Series)):
             dframe = dframe.values
@@ -546,7 +706,8 @@ def pdp(
         return
 
     if isinstance(dframe, pd.Series):
-        df = dframe.to_frame()
+        df, isser = series_to_dataframe(dframe)
+        # df = dframe.to_frame()
     else:
         df = dframe
     if not isinstance(df, (pd.DataFrame, pd.Series)):
@@ -659,6 +820,19 @@ def pdp(
             emptyline = emptyline + 1
 
         print("", end="\n")
+    if print_shape:
+        if isser is False:
+            pdp(
+                pd.DataFrame(
+                    [dframe.shape[0], dframe.shape[1]], index=["rows", "columns"]
+                ).T.rename({0: "DataFrame"}),
+                print_shape=False,
+            )
+        else:
+            pdp(
+                pd.DataFrame([dframe.shape[0]], index=["rows"]).T.rename({0: "Series"}),
+                print_shape=False,
+            )
 
 
 def flattenlist_neu(iterable, types=(list, tuple)):
@@ -1045,11 +1219,7 @@ def pandasprintcolor(self):
         max_colwidth=self.max_colwidth,
         repeat_cols=self.repeat_cols,
     )
-    pdp(
-        pd.DataFrame(
-            [self.shape[0], self.shape[1]], index=["rows", "columns"]
-        ).T.rename({0: "DataFrame"})
-    )
+
     return ""
 
 
@@ -1075,7 +1245,6 @@ def pandasprintcolor_s(self):
         max_colwidth=self.max_colwidth,
         repeat_cols=self.repeat_cols,
     )
-    pdp(pd.DataFrame([self.shape[0]], index=["rows"]).T.rename({0: "Series"}))
     return ""
 
 
