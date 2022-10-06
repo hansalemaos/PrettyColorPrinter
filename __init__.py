@@ -564,21 +564,22 @@ def print_df_with_multiindex(df, max_colwidth=300):
     indi = list(gruppiert.index)
     alt = []
     addextraspace = 2 if len(allindexlen) % 2 == 0 else 1
-    allcolumns = (
-        addextraspace*' '+str(
-            str("    MULTIINDEX" + (' ' * sum([_+5 for _ in allindexlen])) + 8*' ' + ''*len(allindexlen))[:sum(allindexlen) +(len(allindexlen)* 8) + 8]
-            + "█"
-            + "█".join(
-                [
-                    str(f"    {x}  " + (y*4*"  ")).rjust(1).ljust(y*2)[:y + 8]
-                    for x, y in zip(gruppiert.columns, valuelen)
-                ]
-            )
-            + "█"
+    allcolumns = addextraspace * " " + str(
+        str(
+            "    MULTIINDEX"
+            + (" " * sum([_ + 5 for _ in allindexlen]))
+            + 8 * " "
+            + "" * len(allindexlen)
+        )[: sum(allindexlen) + (len(allindexlen) * 8) + 8]
+        + "█"
+        + "█".join(
+            [
+                str(f"    {x}  " + (y * 4 * "  ")).rjust(1).ljust(y * 2)[: y + 8]
+                for x, y in zip(gruppiert.columns, valuelen)
+            ]
         )
-        .replace("\n", "\\n")
-        .replace("\r", "\\r")
-    )
+        + "█"
+    ).replace("\n", "\\n").replace("\r", "\\r")
     print(TC(allcolumns).fg_black.bg_red, end="\n")
     for ini, bb in enumerate(indi):
         print(str(ini).rjust(7), end="")
