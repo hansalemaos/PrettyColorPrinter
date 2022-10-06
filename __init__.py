@@ -7,7 +7,7 @@ from itertools import cycle, islice
 import pandas as pd
 from cprinter import TC  # pip install cprinter
 from input_timeout import InputTimeout
-
+from pandas.core.frame import DataFrame, Series, Index
 
 len_array = np.frompyfunc(len, 1, 1)
 regex_endvalue1 = regex.compile(r"""^\W*(['"])""")
@@ -1034,10 +1034,127 @@ def qq_ds_print_nolimit_with_break(
         return df
 
 
-def add_printer():
+def pandasprintcolor(self):
+    print("")
+    pdp(
+        pd.DataFrame(
+            self.__array__()[: self.print_stop],
+            columns=self.columns,
+            index=self.index[: self.print_stop],
+        ),
+        max_colwidth=self.max_colwidth,
+        repeat_cols=self.repeat_cols,
+    )
+    pdp(
+        pd.DataFrame(
+            [self.shape[0], self.shape[1]], index=["rows", "columns"]
+        ).T.rename({0: "DataFrame"})
+    )
+    return ""
+
+
+def copy_func(f):
+    # https://stackoverflow.com/a/67083317/15096247
+    # Create a lambda that mimics f
+    g = lambda *args: f(*args)
+    # Add any properties of f
+    t = list(filter(lambda prop: not ("__" in prop), dir(f)))
+    i = 0
+    while i < len(t):
+        setattr(g, t[i], getattr(f, t[i]))
+        i += 1
+    return g
+
+
+def pandasprintcolor_s(self):
+    print("")
+    pdp(
+        pd.DataFrame(
+            self.__array__()[: self.print_stop], index=self.index[: self.print_stop]
+        ),
+        max_colwidth=self.max_colwidth,
+        repeat_cols=self.repeat_cols,
+    )
+    pdp(pd.DataFrame([self.shape[0]], index=["rows"]).T.rename({0: "Series"}))
+    return ""
+
+
+def pandasindexcolor(self):
+    print("")
+    pdp(pd.DataFrame(self.__array__()[: self.print_stop].reshape((-1, 1))))
+    return ""
+
+
+def reset_print_options():
+    PandasObject.__str__ = copy_func(PandasObject.old__str__)
+    PandasObject.__repr__ = copy_func(PandasObject.old__repr__)
+    DataFrame.__repr__ = copy_func(DataFrame.old__repr__)
+    DataFrame.__str__ = copy_func(DataFrame.old__str__)
+    Series.__repr__ = copy_func(Series.old__repr__)
+    Series.__str__ = copy_func(Series.old__str__)
+    Index.__repr__ = copy_func(Index.old__repr__)
+    Index.__str__ = copy_func(Index.old__str__)
+
+
+def substitute_print_with_color_print(
+    print_stop: int = 69, max_colwidth: int = 300, repeat_cols: int = 70
+):
+
+    if not hasattr(pd, "color_printer_active"):
+        PandasObject.old__str__ = copy_func(PandasObject.__str__)
+        PandasObject.old__repr__ = copy_func(PandasObject.__repr__)
+        DataFrame.old__repr__ = copy_func(DataFrame.__repr__)
+        DataFrame.old__str__ = copy_func(DataFrame.__str__)
+        Series.old__repr__ = copy_func(Series.__repr__)
+        Series.old__str__ = copy_func(Series.__str__)
+        Index.old__repr__ = copy_func(Index.__repr__)
+        Index.old__str__ = copy_func(Index.__str__)
+
+    PandasObject.__str__ = lambda x: pandasprintcolor(x)
+    PandasObject.__repr__ = lambda x: pandasprintcolor(x)
+    PandasObject.print_stop = print_stop
+    PandasObject.max_colwidth = max_colwidth
+    PandasObject.repeat_cols = repeat_cols
+    DataFrame.__repr__ = lambda x: pandasprintcolor(x)
+    DataFrame.__str__ = lambda x: pandasprintcolor(x)
+    DataFrame.print_stop = print_stop
+    DataFrame.max_colwidth = max_colwidth
+    DataFrame.repeat_cols = repeat_cols
+    Series.__repr__ = lambda x: pandasprintcolor_s(x)
+    Series.__str__ = lambda x: pandasprintcolor_s(x)
+    Series.print_stop = print_stop
+    Series.max_colwidth = max_colwidth
+    Series.repeat_cols = repeat_cols
+    Index.__repr__ = lambda x: pandasindexcolor(x)
+    Index.__str__ = lambda x: pandasindexcolor(x)
+    Index.print_stop = print_stop
+    Index.max_colwidth = max_colwidth
+    Index.repeat_cols = 10000000
+    pd.color_printer_activate = substitute_print_with_color_print
+    pd.color_printer_reset = reset_print_options
+    pd.color_printer_active = True
+
+
+def add_printer(overwrite_pandas_printer=False):
+    """
+    If you pass overwrite_pandas_printer=True then the color printer will replace __str__ and __repr__ from pandas
+
+    You can configure the color printer using:
+        pd.color_printer_activate(print_stop:int=69,max_colwidth:int=300,repeat_cols:int=70)
+        print_stop = maximum lines to print
+        max_colwidth = maximum column width
+        repeat_cols = for better readability, the columns are printed each x row
+
+
+    This is how you switch back and forth between standard pandas and color printer:
+        pd.color_printer_reset() #to standard pandas
+        pd.color_printer_activate() #to color printer
+    """
     PandasObject.ds_color_print = qq_ds_print
     PandasObject.ds_color_print_all = qq_ds_print_nolimit
-    PandasObject.d_color_print_columns = qq_d_print_columns
-    PandasObject.d_color_print_index = qq_ds_print_index
+    DataFrame.d_color_print_columns = qq_d_print_columns
+    DataFrame.d_color_print_index = qq_ds_print_index
     PandasObject.ds_color_print_all_with_break = qq_ds_print_nolimit_with_break
     PandasObject.ds_color_print_context = qq_ds_print_context
+    if overwrite_pandas_printer:
+        substitute_print_with_color_print()

@@ -1,4 +1,4 @@
-# **Print colored Numpy arrays / pandas DataFrames / Pandas Series / lists / dicts / tuples! **
+# **Print colored Numpy arrays / pandas DataFrames / Pandas Series / lists / dicts / tuples!**
 
 ```python
 pip install PrettyColorPrinter
@@ -14,6 +14,26 @@ add_printer() #This function will add some methods to PandasObject
 
 import pandas as pd
 df=pd.read_csv(r"https://github.com/pandas-dev/pandas/raw/main/doc/data/air_quality_no2_long.csv")
+```
+
+### **Update 05/10/2022**
+
+```python
+add_printer(overwrite_pandas_printer=False)
+    """
+    If you pass overwrite_pandas_printer=True then the color printer will replace __str__ and __repr__ from pandas
+
+    You can configure the color printer using:
+        pd.color_printer_activate(print_stop:int=69,max_colwidth:int=300,repeat_cols:int=70)
+        print_stop = maximum lines to print
+        max_colwidth = maximum column width
+        repeat_cols = for better readability, the columns are printed each x row
+
+
+    This is how you switch back and forth between standard pandas and color printer:
+        pd.color_printer_reset() #to standard pandas
+        pd.color_printer_activate() #to color printer
+    """
 ```
 
 <img title="" src="https://github.com/hansalemaos/PrettyColorPrinter/raw/main/a11.png" alt="">
