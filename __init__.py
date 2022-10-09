@@ -651,8 +651,7 @@ def print_df_with_multiindex(df, max_colwidth=300):
         #     )
 
 def print_col_width_len(df):
-    isser=isinstance(df, pd.Series)
-    if not isser:
+    try:
 
         pdp(
             pd.DataFrame(
@@ -660,7 +659,7 @@ def print_col_width_len(df):
             ).T.rename({0: "DataFrame"}, ),
             print_shape=False,
         )
-    else:
+    except Exception:
         pdp(
             pd.DataFrame([df.shape[0]], index=["rows"]).T.rename({0: "Series"}),
             print_shape=False,
