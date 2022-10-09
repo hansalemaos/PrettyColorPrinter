@@ -636,11 +636,28 @@ def print_df_with_multiindex(df, max_colwidth=300):
 
         print("")
         alt = bb
+
+    # if not isser:
+        #     pdp(
+        #         pd.DataFrame(
+        #             [df.shape[0], df.shape[1]], index=["rows", "columns"]
+        #         ).T.rename({0: "DataFrame"},),
+        #         print_shape=None,
+        #     )
+        # else:
+        #     pdp(
+        #         pd.DataFrame([df.shape[0]], index=["rows"]).T.rename({0: "Series"}),
+        #         print_shape=None,
+        #     )
+
+def print_col_width_len(df):
+    isser=isinstance(df, pd.Series)
     if not isser:
+
         pdp(
             pd.DataFrame(
                 [df.shape[0], df.shape[1]], index=["rows", "columns"]
-            ).T.rename({0: "DataFrame"},),
+            ).T.rename({0: "DataFrame"}, ),
             print_shape=False,
         )
     else:
@@ -648,7 +665,6 @@ def print_df_with_multiindex(df, max_colwidth=300):
             pd.DataFrame([df.shape[0]], index=["rows"]).T.rename({0: "Series"}),
             print_shape=False,
         )
-
 
 def pdp(
     dframe: Any,
@@ -658,7 +674,7 @@ def pdp(
     reshape_big_1_dim_arrays: int = 0,
     when_to_take_a_break: int = 0,
     break_how_long: int = 5,
-    print_shape=True,
+    print_shape=False,
 ) -> None:
     """
     Parameters
@@ -829,19 +845,20 @@ def pdp(
             emptyline = emptyline + 1
 
         print("", end="\n")
-    if print_shape:
-        if isser is False:
-            pdp(
-                pd.DataFrame(
-                    [dframe.shape[0], dframe.shape[1]], index=["rows", "columns"]
-                ).T.rename({0: "DataFrame"}),
-                print_shape=False,
-            )
-        else:
-            pdp(
-                pd.DataFrame([dframe.shape[0]], index=["rows"]).T.rename({0: "Series"}),
-                print_shape=False,
-            )
+    if print_shape is True:
+        if isinstance(dframe, (pd.Series,pd.DataFrame)):
+            if isser is False:
+                pdp(
+                    pd.DataFrame(
+                        [dframe.shape[0], dframe.shape[1]], index=["rows", "columns"]
+                    ).T.rename({0: "DataFrame"}),
+                    print_shape=False,
+                )
+            else:
+                pdp(
+                    pd.DataFrame([dframe.shape[0]], index=["rows"]).T.rename({0: "Series"}),
+                    print_shape=False,
+                )
 
 
 def flattenlist_neu(iterable, types=(list, tuple)):
@@ -934,6 +951,7 @@ def qq_ds_print(
         _print_normal_pandas(
             df, maxrows=max_rows, maxcols=None, max_colwidth=max_colwidth
         )
+    print_col_width_len(df)
     if returndf:
         return df
 
@@ -975,6 +993,8 @@ def qq_ds_print_nolimit(
         )
     except Exception:
         _print_normal_pandas(df, maxrows=None, maxcols=None, max_colwidth=None)
+    print_col_width_len(df)
+
     if returndf:
         return df
 
@@ -1033,6 +1053,8 @@ def qq_ds_print_context(
         asnumpy=asnumpy,
         returndf=False,
     )
+    print_col_width_len(df)
+
     if returndf:
         return finaldf.copy()
 
@@ -1213,6 +1235,8 @@ def qq_ds_print_nolimit_with_break(
         )
     except Exception:
         _print_normal_pandas(df, maxrows=None, maxcols=None, max_colwidth=None)
+    print_col_width_len(df)
+
     if returndf:
         return df
 
@@ -1228,6 +1252,7 @@ def pandasprintcolor(self):
         max_colwidth=self.max_colwidth,
         repeat_cols=self.repeat_cols,
     )
+    print_col_width_len(self.__array__())
 
     return ""
 
@@ -1254,6 +1279,8 @@ def pandasprintcolor_s(self):
         max_colwidth=self.max_colwidth,
         repeat_cols=self.repeat_cols,
     )
+    print_col_width_len(self.__array__())
+
     return ""
 
 
