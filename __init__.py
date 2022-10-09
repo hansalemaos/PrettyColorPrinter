@@ -688,6 +688,14 @@ def pdp(
     max_column_size = max_colwidth
     arrayname = "a"
     if isinstance(dframe, (pd.DataFrame, pd.Series)):
+        if len(dframe) ==0:
+            print(TC("Empty DataFrame\n\n").bg_black.fg_red.bold)
+            try:
+                print(TC("Columns:").bg_black.fg_yellow.bold, end='')
+                print(dframe.columns.to_list())
+            except Exception:
+                pass
+            return
         if isinstance(dframe.index[0], tuple):
             print_df_with_multiindex(dframe, max_colwidth=max_column_size)
             return

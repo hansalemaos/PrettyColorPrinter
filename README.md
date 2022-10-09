@@ -16,7 +16,11 @@ import pandas as pd
 df=pd.read_csv(r"https://github.com/pandas-dev/pandas/raw/main/doc/data/air_quality_no2_long.csv")
 ```
 
-### **Update 05/10/2022**
+### Update 2022/10/08
+
+Fixed a bug with empty DataFrames
+
+### **Update 2022/10/05**
 
 ```python
 add_printer(overwrite_pandas_printer=False)
@@ -32,7 +36,6 @@ You can configure the color printer using:
     This is how you switch back and forth between standard pandas and color printer:
       pd.color_printer_reset() #to standard pandas
       pd.color_printer_activate() #to color printer
-
 ```
 
 ### Have a look
@@ -58,8 +61,6 @@ df #if you type df, you will get a colored dataframe instead of the regular pand
 ![](https://github.com/hansalemaos/PrettyColorPrinter/raw/main/a12.png)
 
 ![](https://github.com/hansalemaos/PrettyColorPrinter/raw/main/a13.png)
-
-
 
 <img title="" src="https://github.com/hansalemaos/PrettyColorPrinter/raw/main/a11.png" alt="">
 
