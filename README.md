@@ -16,6 +16,18 @@ import pandas as pd
 df=pd.read_csv(r"https://github.com/pandas-dev/pandas/raw/main/doc/data/air_quality_no2_long.csv")
 ```
 
+### Update 2022/12/27
+
+You can switch between the colored version and the black/white version. 
+
+```python
+import pandas as pd
+from PrettyColorPrinter import add_printer, switch_color_bw
+add_printer(True)
+switch_color_bw()
+
+```
+
 ### Update 2022/10/08
 
 Fixed a bug with empty DataFrames
