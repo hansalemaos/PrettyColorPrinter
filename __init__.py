@@ -520,7 +520,7 @@ def _get_colors_bg(len_numpyarray):
 def series_to_dataframe(
     df: Union[pd.Series, pd.DataFrame]
 ) -> (Union[pd.Series, pd.DataFrame], bool):
-    dataf = df.copy()
+    dataf = df#.copy()
     isseries = False
     if isinstance(dataf, pd.Series):
         columnname = dataf.name
@@ -1362,3 +1362,152 @@ def add_printer(overwrite_pandas_printer=False):
     PandasObject.ds_color_print_context = qq_ds_print_context
     if overwrite_pandas_printer:
         substitute_print_with_color_print()
+
+
+
+def stringprint(dframe, max_colwidth=50, repeatcols=70,*args,**kwargs):
+    try:
+        df, isseries = series_to_dataframe(dframe)
+        valuelen = [
+            g if (g := df[x].astype("string").__array__().astype("U").itemsize // 4) < max_colwidth else max_colwidth
+            for x in df.columns]
+        indi = (df.index.astype("string").__array__().astype("U").itemsize // 4)
+        valuelen.insert(0, indi if indi < max_colwidth else max_colwidth)
+        valuelen = [len(str(x)) if len(str(x)) > y else y for x, y in
+                    zip(['i n d e x'] + df.columns.to_list(), valuelen)]
+        for l1, l2 in zip(range(len(df)), range(1, len(df) + 1)):
+            df2 = df.iloc[l1:l2].copy()
+            df2.insert(0, 'i n d e x', df2.index.__array__().copy())
+
+            for a, b in zip(valuelen, ['i n d e x'] + df.columns.to_list()):
+                df2[b] = df2[b].astype(str).str.ljust(a).str.rjust(a).apply(
+                    lambda ax: ax[:a] + ' █')  # df2[b]['i n d e x'] =df2.index.__array__().copy()
+
+
+            if l1 == 0 or l1 % repeatcols == 0:
+                collis = [' ' + str(b).ljust(a).rjust(a)[:a] + c * '' + ' █' for a, b, c in
+                          zip(valuelen, ['i n d e x'] + df.columns.to_list(), range(len(valuelen)))]
+
+                yield '\n\n'
+                colip =  ''.join(collis).lstrip().rstrip()
+                yield colip
+                yield len(colip) * '█'
+
+
+            yield df2.to_string(header=False, index=False)
+    except Exception:
+        for f in dframe:
+            yield f
+
+
+def spr(df, max_colwidth=50, repeatcols=70,*args,**kwargs):
+    if isinstance(df.index[0], tuple):
+        print_df_with_multiindex_no_color(df, max_colwidth=max_colwidth)
+        return
+    for ba in stringprint(df, repeatcols=repeatcols, max_colwidth=max_colwidth):
+        print(ba)
+    return ''
+
+
+
+def print_df_with_multiindex_no_color(df, max_colwidth=300):
+    gruppiert, isser = series_to_dataframe(df)
+
+    allindexlen = []
+    for __x in range(len(gruppiert.index[0])):
+        allindexlen.append(
+            len(sorted([str(x[__x]) for x in gruppiert.index], key=len)[-1])
+        )
+    valuelen = [
+        gruppiert[x].astype("string").__array__().astype("U").itemsize // 4
+        for x in gruppiert.columns
+    ]
+    valuelen = [
+        len(str(x)) if len(str(x)) > y else y
+        for x, y in zip(gruppiert.columns, valuelen)
+    ]
+    valuelen = [
+        len(str(x)) if len(str(x)) > y else y
+        for x, y in zip(gruppiert.columns, valuelen)
+    ]
+    valuelen = [x if x < max_colwidth else max_colwidth for x in valuelen]
+    allindexlen = [x if x < max_colwidth else max_colwidth for x in allindexlen]
+    valuegrup = gruppiert.__array__()
+    indi = list(gruppiert.index)
+    alt = []
+    addextraspace = 2 if len(allindexlen) % 2 == 0 else 1
+    allcolumns = addextraspace * " " + str(
+        str(
+            "    MULTIINDEX"
+            + (" " * sum([_ + 5 for _ in allindexlen]))
+            + 8 * " "
+            + "" * len(allindexlen)
+        )[: sum(allindexlen) + (len(allindexlen) * 8) + 6]
+        + "█"
+        + "█".join(
+            [
+                str(f"    {x}  " + (y * 4 * "  ")).rjust(1).ljust(y * 2)[: y + 8]
+                for x, y in zip(gruppiert.columns, valuelen)
+            ]
+        )
+        + "█"
+    ).replace("\n", "\\n").replace("\r", "\\r")
+    print(allcolumns)
+    for ini, bb in enumerate(indi):
+        print(str(ini).rjust(7), end="")
+        if ini == 0:
+            alt = ["" for ___ in range(len(bb))]
+
+        for ini1, va1, altindex in zip(range(len(bb)), bb, alt):
+            if len(set(list(bb[:ini1])) & set(list(alt[:ini1]))) == (
+                len(list(bb[:ini1]))
+            ):
+                if va1 != altindex:
+                    row2 = (
+                        ((str(va1)).rjust(1).ljust(allindexlen[ini1] + 2))
+                        .replace("\n", "\\n")
+                        .replace("\r", "\\r")
+                    )[: allindexlen[ini1] + 2]
+                    print(f"    {row2}  ", end="")
+                    print(rf"█", end="")
+                else:
+
+                    row2 = (
+                        (str(va1).rjust(1).ljust(allindexlen[ini1] + 2))
+                        .replace("\n", "\\n")
+                        .replace("\r", "\\r")
+                    )[: allindexlen[ini1] + 2]
+                    print(f"    {row2}  ", end="")
+                    print(rf"█", end="")
+
+            else:
+                row2 = (
+                    str(va1)
+                    .rjust(1)
+                    .ljust(allindexlen[ini1] + 2)
+                    .replace("\n", "\\n")
+                    .replace("\r", "\\r")
+                )[: allindexlen[ini1] + 2]
+                print(f"    {row2}  ", end="")
+                print(rf"█", end="")
+
+        for ini0, va in enumerate(valuegrup[ini]):
+            row2 = (
+                (str(va).rjust(1).ljust(valuelen[ini0] + 2))
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+            )[: valuelen[ini0] + 2]
+            print(f"    {row2}  ", end="")
+            print(rf"█", end="")
+
+        print("")
+        alt = bb
+
+def switch_color_bw():
+    global spr
+    global pdp
+    global print_df_with_multiindex_no_color
+    global print_df_with_multiindex
+    spr, pdp = pdp,spr
+    print_df_with_multiindex_no_color, print_df_with_multiindex = print_df_with_multiindex_no_color,print_df_with_multiindex
+
