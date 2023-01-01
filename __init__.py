@@ -1401,11 +1401,14 @@ def stringprint(dframe, max_colwidth=50, repeatcols=70,*args,**kwargs):
 
 
 def spr(df, max_colwidth=50, repeatcols=70,*args,**kwargs):
-    if isinstance(df.index[0], tuple):
-        print_df_with_multiindex_no_color(df, max_colwidth=max_colwidth)
-        return
-    for ba in stringprint(df, repeatcols=repeatcols, max_colwidth=max_colwidth):
-        print(ba)
+    try:
+        if isinstance(df.index[0], tuple):
+            print_df_with_multiindex_no_color(df, max_colwidth=max_colwidth)
+            return
+        for ba in stringprint(df, repeatcols=repeatcols, max_colwidth=max_colwidth):
+            print(ba)
+    except Exception:
+        print(df)
     return ''
 
 
