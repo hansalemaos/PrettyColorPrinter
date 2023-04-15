@@ -767,14 +767,14 @@ def pdp(
                 pass
                 print("", end="\n")
 
-    maxsize = [
-        df[x].astype("string").array.astype("U").dtype.itemsize // 4 for x in df.columns
-    ]
+    maxsize = (
+        df[x].astype("string").__array__().astype("U").dtype.itemsize //4 for x in df.columns
+    )
     maxsize_cols = [len(str(x)) for x in df.columns]
     maxsize = [x if x >= y else y for x, y in zip(maxsize, maxsize_cols)]
 
     maxsize_ = [x + 2 if x < max_column_size else max_column_size for x in maxsize]
-    maxindexsize = 4 + (df.index.astype("string").array.astype("U").dtype.itemsize // 4)
+    maxindexsize = 4 + (df.index.astype("string").__array__().astype("U").dtype.itemsize // 4)
     if maxindexsize < 8:
         maxindexsize = 9
 
