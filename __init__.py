@@ -536,6 +536,14 @@ def series_to_dataframe(
     return dataf, isseries
 
 
+def _conv_col(column):
+    try:
+        return column.astype("string")
+    except Exception:
+        return column.apply(lambda x: x.decode('utf-8', 'replace') if isinstance(x, bytes) else str(x)).astype(
+        "string")
+
+
 def print_df_with_multiindex(df, max_colwidth=300):
     gruppiert, isser = series_to_dataframe(df)
 
@@ -547,7 +555,7 @@ def print_df_with_multiindex(df, max_colwidth=300):
             len(sorted([str(x[__x]) for x in gruppiert.index], key=len)[-1])
         )
     valuelen = [
-        gruppiert[x].astype("string").__array__().astype("U").itemsize // 4
+        _conv_col(gruppiert[x])  .__array__().astype("U").itemsize // 4
         for x in gruppiert.columns
     ]
     valuelen = [
@@ -768,13 +776,13 @@ def pdp(
                 print("", end="\n")
 
     maxsize = (
-        df[x].astype("string").__array__().astype("U").dtype.itemsize //4 for x in df.columns
+        _conv_col(df[x]).__array__().astype("U").dtype.itemsize //4 for x in df.columns
     )
     maxsize_cols = [len(str(x)) for x in df.columns]
     maxsize = [x if x >= y else y for x, y in zip(maxsize, maxsize_cols)]
 
     maxsize_ = [x + 2 if x < max_column_size else max_column_size for x in maxsize]
-    maxindexsize = 4 + (df.index.astype("string").__array__().astype("U").dtype.itemsize // 4)
+    maxindexsize = 4 + (_conv_col(df.index).__array__().astype("U").dtype.itemsize // 4)
     if maxindexsize < 8:
         maxindexsize = 9
 
@@ -1369,9 +1377,9 @@ def stringprint(dframe, max_colwidth=50, repeatcols=70,*args,**kwargs):
     try:
         df, isseries = series_to_dataframe(dframe)
         valuelen = [
-            g if (g := df[x].astype("string").__array__().astype("U").itemsize // 4) < max_colwidth else max_colwidth
+            g if (g := _conv_col(df[x]).__array__().astype("U").itemsize // 4) < max_colwidth else max_colwidth
             for x in df.columns]
-        indi = (df.index.astype("string").__array__().astype("U").itemsize // 4)
+        indi = (_conv_col(df.index).__array__().astype("U").itemsize // 4)
         valuelen.insert(0, indi if indi < max_colwidth else max_colwidth)
         valuelen = [len(str(x)) if len(str(x)) > y else y for x, y in
                     zip(['i n d e x'] + df.columns.to_list(), valuelen)]
@@ -1380,7 +1388,7 @@ def stringprint(dframe, max_colwidth=50, repeatcols=70,*args,**kwargs):
             df2.insert(0, 'i n d e x', df2.index.__array__().copy())
 
             for a, b in zip(valuelen, ['i n d e x'] + df.columns.to_list()):
-                df2[b] = df2[b].astype(str).str.ljust(a).str.rjust(a).apply(
+                df2[b] = _conv_col(df2[b]).str.ljust(a).str.rjust(a).apply(
                     lambda ax: ax[:a] + ' █')  # df2[b]['i n d e x'] =df2.index.__array__().copy()
 
 
@@ -1422,7 +1430,7 @@ def print_df_with_multiindex_no_color(df, max_colwidth=300):
             len(sorted([str(x[__x]) for x in gruppiert.index], key=len)[-1])
         )
     valuelen = [
-        gruppiert[x].astype("string").__array__().astype("U").itemsize // 4
+        _conv_col(gruppiert[x]).__array__().astype("U").itemsize // 4
         for x in gruppiert.columns
     ]
     valuelen = [
