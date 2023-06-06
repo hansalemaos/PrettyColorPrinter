@@ -18,6 +18,11 @@ nullend = regex.compile(r"\[0\]$")
 nested_dict = lambda: defaultdict(nested_dict)
 
 
+def _dummyimport():
+    import kthread
+    import keyboard
+
+
 def _get_colors(len_numpyarray):
     def repeatlist(it, count):
         return islice(cycle(it), count)

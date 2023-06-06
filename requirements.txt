@@ -1,5 +1,7 @@
 cprinter
 input_timeout
+keyboard
+kthread
 numpy
 pandas
 regex
