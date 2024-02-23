@@ -263,6 +263,7 @@ def numpyprinter(
     indentlist.append(1)
     alreadyprinted = []
     intotal = []
+    print('\033[12:2p')
     if isinstance(wholearray, (dict)):
         print("\n", end="")
         _, indtoprint = get_rightindexlist(
@@ -311,6 +312,7 @@ def numpyprinter(
             longix = get_longest_item(np.atleast_1d(wholearray))
         if printarr is not None:
             longix = printarr
+        print('\033[12:2p')
         for indi0, subitem in enumerate(wholearray):
 
             longi = longix[indi0]
@@ -945,6 +947,7 @@ def qq_ds_print(
 
 
         """
+    print('\033[12:2p')
     dftouse = df
     try:
         if len(df.index[0]) > 1:
@@ -988,7 +991,7 @@ def qq_ds_print_nolimit(
 
 
         """
-
+    print('\033[12:2p')
     dftouse = df
     try:
         if len(df.index[0]) > 1:
@@ -1057,6 +1060,7 @@ def qq_ds_print_context(
     while ending > len_df - 1:
         ending = ending - 1
     finaldf = df[beginning:ending]
+    print('\033[12:2p')    
     qq_ds_print(
         finaldf,
         max_rows=len(finaldf),
@@ -1087,6 +1091,7 @@ def qq_d_print_columns(
         If there are duplicated columns in a Pandas DataFrame,
         it changes to printasnp = True  (default is False)
         """
+    print('\033[12:2p')    
     pdp(
         df.columns.__array__().reshape((-1, 1)),
         max_colwidth=max_colwidth,
@@ -1230,6 +1235,7 @@ def qq_ds_print_nolimit_with_break(
         return the input DataFrame to allow chaining
         """
     dftouse = df
+    print('\033[12:2p')    
     try:
         if len(df.index[0]) > 1:
             df2 = df.copy().reset_index()
@@ -1255,6 +1261,7 @@ def qq_ds_print_nolimit_with_break(
 
 def pandasprintcolor(self):
     print("")
+    print('\033[12:2p')
     pdp(
         pd.DataFrame(
             self.__array__()[: self.print_stop],
@@ -1284,6 +1291,7 @@ def copy_func(f):
 
 def pandasprintcolor_s(self):
     print("")
+    print('\033[12:2p')
     pdp(
         pd.DataFrame(
             self.__array__()[: self.print_stop], index=self.index[: self.print_stop]
@@ -1298,6 +1306,8 @@ def pandasprintcolor_s(self):
 
 def pandasindexcolor(self):
     print("")
+    print('\033[12:2p')
+
     pdp(pd.DataFrame(self.__array__()[: self.print_stop].reshape((-1, 1))))
     return ""
 
